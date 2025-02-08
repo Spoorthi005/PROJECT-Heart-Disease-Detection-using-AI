@@ -1,0 +1,96 @@
+import numpy as np    # linear algebra
+import pandas as pd   # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+df = pd.read_csv('/Heart_Disease_Detection.csv')
+df.head()
+df.shape
+df.duplicated().sum()
+df.isnull().sum()
+df.info()
+df.describe()
+
+#Exploratory Data Analysis#
+import matplotlib.pyplot as plt
+import seaborn as sns
+df['Sex'].value_counts()
+labels = 'Male', 'Female'
+sizes = [183,87]
+
+fig, ax = plt.subplots()
+ax.pie(sizes, labels=labels, autopct='%1.1f%%',shadow=True, startangle=90)
+ax = sns.countplot(df,x = 'Chest pain type',hue = 'Heart Disease',palette = 'Set2')
+for lab in ax.containers:
+    ax.bar_label(lab)
+sns.lineplot(df,x = 'Age',y = 'BP',hue = 'Sex',palette="Set1")
+sns.lineplot(df,x = 'Age',y = 'Cholesterol',hue = 'Sex',palette='viridis')
+ax = sns.countplot(df,x ='Exercise angina',hue = 'Heart Disease',palette= "magma")
+for lab in ax.containers:
+    ax.bar_label(lab)
+ax = sns.countplot(df,x = 'FBS over 120',hue = 'Heart Disease',palette = "Paired")
+for lab in ax.containers:
+    ax.bar_label(lab)
+sns.boxplot(df,x = 'Heart Disease',y = 'ST depression',palette = 'mako')
+sns.boxplot(df,x = 'Heart Disease',y = 'Thallium',palette = 'flare')
+df['Heart Disease'] = df['Heart Disease'].map({'Absence': 0, 'Presence': 1})
+X = df.drop(columns=['Heart Disease'])
+y = df['Heart Disease']
+from sklearn.preprocessing import StandardScaler,LabelEncoder
+
+#Train Test Split
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+ 
+#Feature Scaling
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+le = LabelEncoder()
+y=le.fit_transform(y)
+
+#Feature Extraction
+
+
+from sklearn.decomposition import PCA
+pca = PCA(n_components=9)
+X_train_trf = pca.fit_transform(X_train)
+X_test_trf = pca.transform(X_test)
+
+#Model Building
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+lr = LogisticRegression()
+lr.fit(X_train_trf,y_train)
+y_pred = lr.predict(X_test_trf)
+
+#Accuracy Prediction
+
+from sklearn.metrics import accuracy_score,r2_score
+accuracy_score(y_test, y_pred)
+knn = KNeighborsClassifier()
+knn.fit(X_train_trf,y_train)
+y_pred2 = knn.predict(X_test_trf)
+accuracy_score(y_test, y_pred2)
+from sklearn.svm import SVC
+svc = SVC()
+svc.fit(X_train_trf,y_train)
+y_pred3 = svc.predict(X_test_trf)
+accuracy_score(y_test, y_pred3)
+rom sklearn.ensemble import RandomForestClassifier
+rf = RandomForestClassifier(
+    n_estimators=50, 
+    random_state=2
+)
+
+rf.fit(X_train_trf, y_train)
+y_pred4 = rf.predict(X_test_trf)
+accuracy_score(y_test, y_pred4)
